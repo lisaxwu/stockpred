@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>D3.chart Boilerplate Example</title>
+    <!-- <link rel=stylesheet href="style.css" type="text/css" media=screen> -->
+    <script src='https://d3js.org/d3.v3.min.js' charset="utf-8"></script>
+    <script src='http://code.jquery.com/jquery-1.8.2.js'></script>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js' charset="utf-8"></script>
+
+<style type="text/css">
+.chart__grid {
+  stroke: #99c5df;
+  opacity: 1;
+}
+svg {
+  font: 10px sans-serif;
+}
+.area {
+  fill: rgba(255,100,100,0.5);
+  clip-path: url("#clip");
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #e7eef4;
+  shape-rendering: crispEdges;
+}
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: 0.125;
+  shape-rendering: crispEdges;
+}
+/*New*/
+.chart text {
+  fill: #7f8faf;
+}
+.chart__line {
+  fill: none;
+  stroke-width: 1.2px;
+  clip-path: url("#clip");
+}
+.chart__price--focus {
+  stroke-width: 2px;
+  stroke: #2980b9;
+}
+.chart__average--focus {
+  stroke-width: 2px;
+  stroke: #f00;
+  opacity: 0.3;
+}
+.chart__overlay {
+  opacity: 0;
+  pointer-events: all;
+}
+.chart__tooltip--price {
+  fill: none;
+  stroke: #f00;
+}
+.chart__tooltip--average {
+  fill: none;
+  stroke: #f00;
+}
+.chart__bars {
+  fill: #99c5df;
+  opacity: 1;
+}
+.chart__range-selection text {
+  cursor: pointer;
+  text-decoration: underline;
+  fill: #2980b9;
+}
+.chart__axis--context text {
+  fill: #7f8faf;
+}
+.chart__axis--context .tick:nth-child(odd) {
+  display: none;
+}
+.chart__axis--context path,
+.chart__axis--context line {
+  display: none;
+}
+.chart__area {
+  fill: #e6f6fe;
+  stroke: #3587bc;
+}
+.extent {
+  fill: #e2f0ff;
+  fill: #3587bc;
+  fill-opacity: 0.3;
+}
+.y.axis .tick text {
+  text-anchor: start !important;
+  fill: #7f8faf;
+}
+.y.axis .tick line {
+  display: none;
+}
+.y.axis path {
+  display: none;
+}
+
+</style>
+
+	</head>
+	<body>
+		<h1 style = "font-family:verdana;">Stock Price Prediction Visual Studio</h1>
+		<form method="post" name="example_form" >
+        	<input name="example" id="forminput" type="text" value="GOOG">the stock symbol<br>
+        	<input name="example2" id="forminput2" type="text" value="20">X-day forward prediction<br>
+        	<input id="button" type="button" value="OK"></input>
+		</form>
+		<div id="result"></div>
+		<br><br>
+
+<script>
+var newdata;
+var n2;
+$(document).ready(function() {
+            $("#button").click(function() {
+                    var symbol = $("#forminput").val();
+                    var day = $("#forminput2").val();
+                    $.ajax({
+                        url : "ajax", 
+                        type : "POST",
+                        data : {
+                            client_response : symbol,
+                            client_response2 : day,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                            },
+                        success : function(data) {
+                            // $('#result').append(json.server_response);  
+                            newdata = [];                  
+                            n2 = data.split(/[{]+/).filter(function(e) { return e; });
+                            n2.forEach(function(d,i){n2[i] = (d.substr(0, 0) + '{' + d.substr(0)).replace(/\'/g, '\"');});
+                    		n2.forEach(function(d){newdata.push(JSON.parse(d))});
+                    		//console.log(data)
+                    		data = [];
+                    		//console.log(data)
+							newdata.forEach(function(d) { 
+								// console.log(d)
+								var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
+								var parts = d.date.split('-');
+								a.date = new Date(parts[0],parts[1]-1,parts[2]);
+								a.price = +d.price;
+								a.average = +d.prep;
+								data.push(a);
+								//console.log(data)
+							});
+                            //console.log(newdata)
+                        },
+                        error : function(xhr,errmsg,err) {
+                            alert(xhr.status + ": " + xhr.responseText);
+                        }
+                    });
+                    return false;
+            });
+        });	
+
+</script>
+
+<!-- start our script -->
+<script>
+
+	var dd={{ csvdata|safe }}; 
+  	
+  	var data = [];
+  	//console.log(data)
+	dd.forEach(function(d) { 
+		// console.log(d)
+		var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
+		var parts = d.date.split('-');
+		a.date = new Date(parts[0],parts[1]-1,parts[2]);
+		if(d.price !== d.price){a.price = 0;}
+		else{a.price = +d.price;}
+		if(d.prep !== d.prep){a.average = 0;}
+		else{a.average = +d.prep;}
+
+		data.push(a);
+	});
+
+	//console.log(data)	
+  
+  var margin = {top: 30, right: 20, bottom: 100, left: 50},
+    margin2  = {top: 210, right: 20, bottom: 20, left: 50},
+    width    = 764 - margin.left - margin.right,
+    height   = 283 - margin.top - margin.bottom,
+    height2  = 283 - margin2.top - margin2.bottom;
+
+  var parseDate = d3.time.format('%d/%m/%Y').parse,
+    bisectDate = d3.bisector(function(d) { return d.date; }).left,
+    legendFormat = d3.time.format('%b %d, %Y');
+
+  var x = d3.time.scale().range([0, width]),
+    x2  = d3.time.scale().range([0, width]),
+    y   = d3.scale.linear().range([height, 0]),
+    y1  = d3.scale.linear().range([height, 0]),
+    y2  = d3.scale.linear().range([height2, 0]),
+    y3  = d3.scale.linear().range([60, 0]);
+
+  var xAxis = d3.svg.axis().scale(x).orient('bottom'),
+    xAxis2  = d3.svg.axis().scale(x2).orient('bottom'),
+    yAxis   = d3.svg.axis().scale(y).orient('left');
+
+  var priceLine = d3.svg.line()
+    .interpolate('monotone')
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.price); });
+
+  var avgLine = d3.svg.line()
+    .interpolate('monotone')
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.average); });
+
+  var area2 = d3.svg.area()
+    .interpolate('monotone')
+    .x(function(d) { return x2(d.date); })
+    .y0(height2)
+    .y1(function(d) { return y2(d.price); });
+
+  var svg = d3.select('body').append('svg')
+    .attr('class', 'chart')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom + 60);
+
+  svg.append('defs').append('clipPath')
+    .attr('id', 'clip')
+    .append('rect')
+    .attr('width', width)
+    .attr('height', height);
+
+  var make_y_axis = function () {
+    return d3.svg.axis()
+      .scale(y)
+      .orient('left')
+      .ticks(3);
+  };
+
+  var focus = svg.append('g')
+    .attr('class', 'focus')
+    .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+  var barsGroup = svg.append('g')
+    .attr('class', 'volume')
+    .attr('clip-path', 'url(#clip)')
+    .attr('transform', 'translate(' + margin.left + ',' + (margin.top + 60 + 20) + ')');
+
+  var context = svg.append('g')
+    .attr('class', 'context')
+    .attr('transform', 'translate(' + margin2.left + ',' + (margin2.top + 60) + ')');
+
+  var legend = svg.append('g')
+    .attr('class', 'chart__legend')
+    .attr('width', width)
+    .attr('height', 30)
+    .attr('transform', 'translate(' + margin2.left + ', 10)');
+
+
+  var rangeSelection =  legend
+    .append('g')
+    .attr('class', 'chart__range-selection')
+    .attr('transform', 'translate(110, 0)');
+
+    //d3.csv('./data/aapl.csv', type, function(err, data) { 	
+   
+    var brush = d3.svg.brush()
+      .x(x2)
+      .on('brush', brushed);
+
+    var xRange = d3.extent(data,function(d) { return d.date; });
+    //console.log(xRange)
+
+    x.domain(xRange);
+    y.domain(d3.extent(data,function(d) { return d.price; }));
+    y3.domain(d3.extent(data,function(d) { if(d.price<0.1||d.average<0.1){return 0;}
+      return d.price-d.average; }));
+    x2.domain(x.domain());
+    y2.domain(y.domain());
+
+    var min = d3.min(data,function(d) { return d.price; });
+    var max = d3.max(data,function(d) { return d.price; });
+
+    var range = legend.append('text')
+      .text(legendFormat(new Date(xRange[0])) + ' - ' + legendFormat(new Date(xRange[1])))
+      .style('text-anchor', 'end')
+      .attr('transform', 'translate(' + width + ', 0)');
+
+    focus.append('g')
+        .attr('class', 'y chart__grid')
+        .call(make_y_axis().tickSize(1).tickFormat(''));
+
+    var averageChart = focus.append('path')
+        .datum(data)
+        .attr('class', 'chart__line chart__average--focus line')
+        .attr('d', avgLine);
+
+    var priceChart = focus.append('path')
+        .datum(data)
+        .attr('class', 'chart__line chart__price--focus line')
+        .attr('d', priceLine);
+
+    focus.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0 ,' + height + ')')
+        .call(xAxis);
+
+    focus.append('g')
+        .attr('class', 'y axis')
+        .attr('transform', 'translate(12, 0)')
+        .call(yAxis);
+
+    var focusGraph = barsGroup.selectAll('rect')
+        .data(data)
+      	.enter().append('rect')
+        .attr('class', 'chart__bars')
+        .attr('x', function(d, i) { return x(d.date); })
+        .attr('y', function(d) { if(d.price<0.1||d.average<0.1) {return 155;} return 155 - y3(d.price-d.average); })
+        .attr('width', 1)
+        .attr('height', function(d) { if(d.price<0.1||d.average<0.1) {return 0;} return y3(d.price-d.average); });
+
+    var helper = focus.append('g')
+      .attr('class', 'chart__helper')
+      .style('text-anchor', 'end')
+      .attr('transform', 'translate(' + width + ', 0)');
+
+    var helperText = helper.append('text')
+
+    var priceTooltip = focus.append('g')
+      .attr('class', 'chart__tooltip--price')
+      .append('circle')
+      .style('display', 'none')
+      .attr('r', 2.5);
+
+    var averageTooltip = focus.append('g')
+      .attr('class', 'chart__tooltip--average')
+      .append('circle')
+      .style('display', 'none')
+      .attr('r', 2.5);
+
+    var mouseArea = svg.append('g')
+      .attr('class', 'chart__mouse')
+      .append('rect')
+      .attr('class', 'chart__overlay')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+      .on('mouseover', function() {
+        helper.style('display', null);
+        priceTooltip.style('display', null);
+        averageTooltip.style('display', null);
+      })
+      .on('mouseout', function() {
+        helper.style('display', 'none');
+        priceTooltip.style('display', 'none');
+        averageTooltip.style('display', 'none');
+      })
+      .on('mousemove', mousemove);
+
+    context.append('path')
+        .datum(data)
+        .attr('class', 'chart__area area')
+        .attr('d', area2);
+
+    context.append('g')
+        .attr('class', 'x axis chart__axis--context')
+        .attr('y', 0)
+        .attr('transform', 'translate(0,' + (height2 - 22) + ')')
+        .call(xAxis2);
+
+    context.append('g')
+        .attr('class', 'x brush')
+        .call(brush)
+      	.selectAll('rect')
+        .attr('y', -6)
+        .attr('height', height2 + 7);
+
+    function mousemove() {
+      var x0 = x.invert(d3.mouse(this)[0]);
+      var i = bisectDate(data, x0, 1);
+      var d0 = data[i - 1];
+      var d1 = data[i];
+      var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+      helperText.text(legendFormat(new Date(d.date)) + ' - Curr Price: ' + d.price + ' Predicted: ' + d.average);
+      priceTooltip.attr('transform', 'translate(' + x(d.date) + ',' + y(d.price) + ')');
+      averageTooltip.attr('transform', 'translate(' + x(d.date) + ',' + y(d.average) + ')');
+    }
+
+    function brushed() {
+      var ext = brush.extent();
+      if (!brush.empty()) {
+        x.domain(brush.empty() ? x2.domain() : brush.extent());
+        y.domain([
+          d3.min(data.map(function(d) { return (d.date >= ext[0] && d.date <= ext[1]) ? d.price : max; })),
+          d3.max(data.map(function(d) { return (d.date >= ext[0] && d.date <= ext[1]) ? d.price : min; }))
+        ]);
+        range.text(legendFormat(new Date(ext[0])) + ' - ' + legendFormat(new Date(ext[1])))
+        focusGraph.attr('x', function(d, i) { return x(d.date); });
+
+        var days = Math.ceil((ext[1] - ext[0]) / (24 * 3600 * 1000))
+        focusGraph.attr('width', (40 > days) ? (40 - days) * 5 / 6 : 5)
+      }
+
+      priceChart.attr('d', priceLine);
+      averageChart.attr('d', avgLine);
+      focus.select('.x.axis').call(xAxis);
+      focus.select('.y.axis').call(yAxis);
+    }
+
+    // var dateRange = ['1w', '1m', '3m', '6m', '1y', '5y']
+    // for (var i = 0, l = dateRange.length; i < l; i ++) {
+    //   var v = dateRange[i];
+    //   rangeSelection
+    //     .append('text')
+    //     .attr('class', 'chart__range-selection')
+    //     .text(v)
+    //     .attr('transform', 'translate(' + (18 * i) + ', 0)')
+    //     .on('click', function(d) { focusOnRange(this.textContent); });
+
+    // }
+
+    function focusOnRange(range) {
+      var today = new Date(data[data.length - 1].date)
+      var ext = new Date(data[data.length - 1].date)
+
+      if (range === '1m')
+        ext.setMonth(ext.getMonth() - 1)
+
+      if (range === '1w')
+        ext.setDate(ext.getDate() - 7)
+
+      if (range === '3m')
+        ext.setMonth(ext.getMonth() - 3)
+
+      if (range === '6m')
+        ext.setMonth(ext.getMonth() - 6)
+
+      if (range === '1y')
+        ext.setFullYear(ext.getFullYear() - 1)
+
+      if (range === '5y')
+        ext.setFullYear(ext.getFullYear() - 5)
+
+      brush.extent([ext, today])
+      brushed()
+      context.select('g.x.brush').call(brush.extent([ext, today]))
+    }
+  
+ //});// end Data	
+
+  function type(d) {
+    return {
+      date    : parseDate(d.Date),
+      price   : +d.Close,
+      average : +d.Average,
+      volume : +d.Volume,
+    }
+  }
+
+</script>
+	</body>
+</html>
