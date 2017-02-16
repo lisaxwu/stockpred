@@ -55,7 +55,7 @@ ROOT_URLCONF = 'stockpred.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/home/jchen351/stockpred/stock'],
+        'DIRS': ['/Users/chanteywu/Desktop/stockpred/stock'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
