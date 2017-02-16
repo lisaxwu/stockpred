@@ -113,72 +113,10 @@ svg {
 		<div id="result"></div>
 		<br><br>
 
-<script>
-var newdata;
-var n2;
-$(document).ready(function() {
-            $("#button").click(function() {
-                    var symbol = $("#forminput").val();
-                    var day = $("#forminput2").val();
-                    $.ajax({
-                        url : "ajax", 
-                        type : "POST",
-                        data : {
-                            client_response : symbol,
-                            client_response2 : day,
-                            csrfmiddlewaretoken: '{{ csrf_token }}'
-                            },
-                        success : function(data) {
-                            // $('#result').append(json.server_response);  
-                            newdata = [];                  
-                            n2 = data.split(/[{]+/).filter(function(e) { return e; });
-                            n2.forEach(function(d,i){n2[i] = (d.substr(0, 0) + '{' + d.substr(0)).replace(/\'/g, '\"');});
-                    		n2.forEach(function(d){newdata.push(JSON.parse(d))});
-                    		//console.log(data)
-                    		data = [];
-                    		//console.log(data)
-							newdata.forEach(function(d) { 
-								// console.log(d)
-								var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
-								var parts = d.date.split('-');
-								a.date = new Date(parts[0],parts[1]-1,parts[2]);
-								a.price = +d.price;
-								a.average = +d.prep;
-								data.push(a);
-								//console.log(data)
-							});
-                            //console.log(newdata)
-                        },
-                        error : function(xhr,errmsg,err) {
-                            alert(xhr.status + ": " + xhr.responseText);
-                        }
-                    });
-                    return false;
-            });
-        });	
-
-</script>
-
 <!-- start our script -->
 <script>
 
-	var dd={{ csvdata|safe }}; 
-  	
-  	var data = [];
-  	//console.log(data)
-	dd.forEach(function(d) { 
-		// console.log(d)
-		var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
-		var parts = d.date.split('-');
-		a.date = new Date(parts[0],parts[1]-1,parts[2]);
-		if(d.price !== d.price){a.price = 0;}
-		else{a.price = +d.price;}
-		if(d.prep !== d.prep){a.average = 0;}
-		else{a.average = +d.prep;}
-
-		data.push(a);
-	});
-
+function drawing(data) {
 	//console.log(data)	
   
   var margin = {top: 30, right: 20, bottom: 100, left: 50},
@@ -228,6 +166,7 @@ $(document).ready(function() {
     .append('rect')
     .attr('width', width)
     .attr('height', height);
+
 
   var make_y_axis = function () {
     return d3.svg.axis()
@@ -406,47 +345,6 @@ $(document).ready(function() {
       focus.select('.y.axis').call(yAxis);
     }
 
-    // var dateRange = ['1w', '1m', '3m', '6m', '1y', '5y']
-    // for (var i = 0, l = dateRange.length; i < l; i ++) {
-    //   var v = dateRange[i];
-    //   rangeSelection
-    //     .append('text')
-    //     .attr('class', 'chart__range-selection')
-    //     .text(v)
-    //     .attr('transform', 'translate(' + (18 * i) + ', 0)')
-    //     .on('click', function(d) { focusOnRange(this.textContent); });
-
-    // }
-
-    function focusOnRange(range) {
-      var today = new Date(data[data.length - 1].date)
-      var ext = new Date(data[data.length - 1].date)
-
-      if (range === '1m')
-        ext.setMonth(ext.getMonth() - 1)
-
-      if (range === '1w')
-        ext.setDate(ext.getDate() - 7)
-
-      if (range === '3m')
-        ext.setMonth(ext.getMonth() - 3)
-
-      if (range === '6m')
-        ext.setMonth(ext.getMonth() - 6)
-
-      if (range === '1y')
-        ext.setFullYear(ext.getFullYear() - 1)
-
-      if (range === '5y')
-        ext.setFullYear(ext.getFullYear() - 5)
-
-      brush.extent([ext, today])
-      brushed()
-      context.select('g.x.brush').call(brush.extent([ext, today]))
-    }
-  
- //});// end Data	
-
   function type(d) {
     return {
       date    : parseDate(d.Date),
@@ -456,6 +354,78 @@ $(document).ready(function() {
     }
   }
 
+}
 </script>
+
+<script>
+
+var dd={{ csvdata|safe }}; 
+    
+var data = [];
+    //console.log(data)
+dd.forEach(function(d) { 
+  // console.log(d)
+  var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
+  var parts = d.date.split('-');
+  a.date = new Date(parts[0],parts[1]-1,parts[2]);
+  if(d.price !== d.price){a.price = 0;}
+  else{a.price = +d.price;}
+  if(d.prep !== d.prep){a.average = 0;}
+  else{a.average = +d.prep;}
+
+  data.push(a);
+});
+
+drawing(data);
+
+var newdata;
+var n2;
+$(document).ready(function() {
+            $("#button").click(function() {
+                    var symbol = $("#forminput").val();
+                    var day = $("#forminput2").val();
+                    $.ajax({
+                        url : "ajax", 
+                        type : "POST",
+                        data : {
+                            client_response : symbol,
+                            client_response2 : day,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                            },
+                        success : function(Data) {
+                            // $('#result').append(json.server_response);  
+                            newdata = [];                  
+                            n2 = Data.split(/[{]+/).filter(function(e) { return e; });
+                            n2.forEach(function(d,i){n2[i] = (d.substr(0, 0) + '{' + d.substr(0)).replace(/\'/g, '\"');});
+                            n2.forEach(function(d){newdata.push(JSON.parse(d))});
+                        //console.log(data)
+                            data = [];
+                        //console.log(data)
+                          newdata.forEach(function(d) { 
+                          // console.log(d)
+                          var a = {"date":new Date("10/01/2010"),"price":0,"average" :0,"volume" :0};
+                          var parts = d.date.split('-');
+                          a.date = new Date(parts[0],parts[1]-1,parts[2]);
+                          a.price = +d.price;
+                          a.average = +d.prep;
+                          data.push(a);
+                          console.log(data)
+                        });
+                          d3.select("svg").remove();
+                          drawing(data);
+                            //console.log(newdata)
+                            //console.log(data)
+                        },
+                        error : function(xhr,errmsg,err) {
+                            alert(xhr.status + ": " + xhr.responseText);
+                        }
+                    });
+                    return false;
+            });
+        }); 
+
+</script>
+
+
 	</body>
 </html>

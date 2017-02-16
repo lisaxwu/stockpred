@@ -131,7 +131,7 @@ def oror(request):
 
 
 def aapl(request):
-	p = predica (sdtrain = dt.datetime(2014,1,1),edtest=pd.datetime.today(), syms = 'GOOG',days = 10)
+	p = predica (sdtrain = dt.datetime(2014,1,1),edtest=pd.datetime.today(), syms = 'AAPL',days = 10)
 	a = pptojsonarray(p)
 	return render(request, "d3stock.html", {"csvdata" : json.dumps(a)})
 

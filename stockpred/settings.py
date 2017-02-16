@@ -15,7 +15,7 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
+STOCK_DIR = os.path.join(BASE_DIR,'stock')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
@@ -55,7 +55,8 @@ ROOT_URLCONF = 'stockpred.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['/Users/chanteywu/Desktop/stockpred/stock'],
+        #'DIRS': ['/Users/chanteywu/Desktop/stockpred/stock'],
+        'DIRS': [STOCK_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
